@@ -149,16 +149,15 @@ for svg_file in svg_files:
 # Set the font's encoding to Unicode
 font.encoding = "unicode"
 
-# Generate css file
+# Generate the css file
 if args.cssfile != "":
     f = open(os.path.join(args.destcssdir, args.cssfile), "w")
     f.write("\n".join(css))
     f.close()
 
+# Generate the font files
 if args.woff1file != "":
     font.generate(os.path.join(args.destfontdir, args.woff1file))
-
-# Generate the font files
 if args.woff2file != "":
     font.generate(os.path.join(args.destfontdir, args.woff2file))
 
