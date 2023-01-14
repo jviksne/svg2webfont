@@ -84,7 +84,7 @@ css = ["""
     font-variant: normal;
     -webkit-font-smoothing: antialiased;
 }
-""" % (fontfamily, ",\n".join(src), args.gencssclass)]
+""" % (fontfamily, ",\n       ".join(src), args.gencssclass)]
 
 # Create a new font
 font = fontforge.font()
