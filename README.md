@@ -27,25 +27,25 @@ Note that by default the css file expected the font files to be located under "f
 ```
   -h, --help            show help message and exit
   -st START, --start START
-                        unicode index to start from, default 0xEA01
+                        unicode index to start from, default: 0xEA01
   -src SRCDIR, --srcdir SRCDIR
-                        path to the directory with SVG files, default "./src/"
+                        path to the directory with SVG files, default: "./src/"
   -fp FONTPATH, --fontpath FONTPATH
                         relative path from css file to font files, default: "../fonts/"
   -ff FONTFAMILY, --fontfamily FONTFAMILY
-                        css font family name
+                        css font family name, default: "Icon Font"
   -css CSSFILE, --cssfile CSSFILE
-                        name of the woff file, default "font.css"
+                        name of the woff file, default: "font.css"
   -wf1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the woff 2.0 file, must have ".woff2" extnesion, default "font.woff"
+                        name of the woff 2.0 file, must have ".woff2" extnesion, default: "font.woff"
   -wf2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the woff2 file, must have ".woff" extnesion, default "font.woff2"
+                        name of the woff2 file, must have ".woff" extnesion, default: "font.woff2"
   -gc GENCSSCLASS, --gencssclass GENCSSCLASS
-                        name for the generic css class shared by all element instances, default "ico"
+                        name for the generic css class shared by all element instances, default: "ico"
   -pr CSSCLASSPREFIX, --cssclassprefix CSSCLASSPREFIX
-                        prefix for the individual font css classes, default "ico-"
+                        prefix for the individual font css classes, default: "ico-"
   -dc DESTCSSDIR, --destcssdir DESTCSSDIR
-                        destination directory where to put css files, default "./dist/css/"
+                        destination directory where to put css files, default: "./dist/css/"
   -df DESTFONTDIR, --destfontdir DESTFONTDIR
-                        destination directory where to put font files, default "./dist/fonts/"
+                        destination directory where to put font files, default: "./dist/fonts/"
 ```
