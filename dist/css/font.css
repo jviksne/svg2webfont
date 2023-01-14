@@ -12,3 +12,13 @@
     font-variant: normal;
     -webkit-font-smoothing: antialiased;
 }
+
+.ico-bookmark::before {
+  content: "\ea01";
+  font-family: "Feather Icon Font";
+}
+
+.ico-settings::before {
+  content: "\ea02";
+  font-family: "Feather Icon Font";
+}

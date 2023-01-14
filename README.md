@@ -1,6 +1,6 @@
 # svg2cssfont
  FontForge Python script for converting a list of SVG files into CSS web font for use as icons.
- Each file will be considered to represent a single character with the file name (without extension) becoming a CSS class with a custom ("ico-") prefix.
+ Each file will be considered to represent a single character with the file name (without extension) becoming a CSS class with a custom ("ico-" by default) prefix.
  Files do not need to be structured.
  Script generates a css file and two font files in WOFF and WOFF 2.0 formats.
  To use the fonts as icons the CSS file needs to be included.
