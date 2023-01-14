@@ -12,16 +12,16 @@ import subprocess
 
 # Parse input arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("-st", "--start", help="unicode index to start from, default: 0xEA01", default=0xEA01, type=int)
+parser.add_argument("-st", "--start", help="Unicode index in hexadecimal form to start from, default: \"EA01\"", default="EA01", type=str)
 parser.add_argument("-src", "--srcdir", help="path to the directory with SVG files, default: \"./src/\"", default="./src/", type=str)
-parser.add_argument("-fp", "--fontpath", help="relative path from css file to font files, default: \"../fonts/\"", default="../fonts/", type=str)
-parser.add_argument("-ff", "--fontfamily", help="css font family name, default: \"Icon Font\"", default="Icon Font", type=str)
-parser.add_argument("-css", "--cssfile", help="name of the woff file, default: \"font.css\"", default="font.css", type=str)
-parser.add_argument("-wf1", "--woff1file", help="name of the woff 2.0 file, must have \".woff2\" extnesion, default: \"font.woff\"", default="font.woff", type=str)
-parser.add_argument("-wf2", "--woff2file", help="name of the woff2 file, must have \".woff\" extnesion, default: \"font.woff2\"", default="font.woff2", type=str)
-parser.add_argument("-gc", "--gencssclass", help="name for the generic css class shared by all element instances, default: \"ico\"", default="ico", type=str)
-parser.add_argument("-pr", "--cssclassprefix", help="prefix for the individual font css classes, default: \"ico-\"", default="ico-", type=str)
-parser.add_argument("-dc", "--destcssdir", help="destination directory where to put css files, default: \"./dist/css/\"", default="./dist/css/", type=str)
+parser.add_argument("-fp", "--fontpath", help="relative path from CSS file to the font files, default: \"../fonts/\"", default="../fonts/", type=str)
+parser.add_argument("-ff", "--fontfamily", help="CSS font family name, default: \"Icon Font\"", default="Icon Font", type=str)
+parser.add_argument("-css", "--cssfile", help="name of the CSS file, default: \"font.css\"", default="font.css", type=str)
+parser.add_argument("-wf1", "--woff1file", help="name of the WOFF v1 file, must have \".woff\" extension, default: \"font.woff\"", default="font.woff", type=str)
+parser.add_argument("-wf2", "--woff2file", help="name of the WOFF v2 file, must have \".woff2\" extension, default: \"font.woff2\"", default="font.woff2", type=str)
+parser.add_argument("-gc", "--gencssclass", help="name for the generic CSS class shared by all element instances, default: \"ico\"", default="ico", type=str)
+parser.add_argument("-pr", "--cssclassprefix", help="prefix for the individual font CSS classes, default: \"ico-\"", default="ico-", type=str)
+parser.add_argument("-dc", "--destcssdir", help="destination directory where to put CSS files, default: \"./dist/css/\"", default="./dist/css/", type=str)
 parser.add_argument("-df", "--destfontdir", help="destination directory where to put font files, default: \"./dist/fonts/\"", default="./dist/fonts/", type=str)
 args = parser.parse_args()
 
@@ -90,7 +90,7 @@ css = ["""
 font = fontforge.font()
 
 # Set the starting Unicode value
-curr_unicode = args.start
+curr_unicode = int(args.start, 16)
 
 # Get the list of SVG files in the directory
 svg_dir = args.srcdir

@@ -25,27 +25,27 @@ Note that by default the css file expected the font files to be located under "f
 ## Arguments
 
 ```
-  -h, --help            show help message and exit
+  -h, --help            show this help message and exit
   -st START, --start START
-                        unicode index to start from, default: 0xEA01
+                        Unicode index in hexadecimal form to start from, default: "EA01"
   -src SRCDIR, --srcdir SRCDIR
                         path to the directory with SVG files, default: "./src/"
   -fp FONTPATH, --fontpath FONTPATH
-                        relative path from css file to font files, default: "../fonts/"
+                        relative path from CSS file to the font files, default: "../fonts/"
   -ff FONTFAMILY, --fontfamily FONTFAMILY
-                        css font family name, default: "Icon Font"
+                        CSS font family name, default: "Icon Font"
   -css CSSFILE, --cssfile CSSFILE
-                        name of the woff file, default: "font.css"
+                        name of the CSS file, default: "font.css"
   -wf1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the woff 2.0 file, must have ".woff2" extnesion, default: "font.woff"
+                        name of the WOFF v1 file, must have ".woff" extension, default: "font.woff"
   -wf2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the woff2 file, must have ".woff" extnesion, default: "font.woff2"
+                        name of the WOFF v2 file, must have ".woff2" extension, default: "font.woff2"
   -gc GENCSSCLASS, --gencssclass GENCSSCLASS
-                        name for the generic css class shared by all element instances, default: "ico"
+                        name for the generic CSS class shared by all element instances, default: "ico"
   -pr CSSCLASSPREFIX, --cssclassprefix CSSCLASSPREFIX
-                        prefix for the individual font css classes, default: "ico-"
+                        prefix for the individual font CSS classes, default: "ico-"
   -dc DESTCSSDIR, --destcssdir DESTCSSDIR
-                        destination directory where to put css files, default: "./dist/css/"
+                        destination directory where to put CSS files, default: "./dist/css/"
   -df DESTFONTDIR, --destfontdir DESTFONTDIR
                         destination directory where to put font files, default: "./dist/fonts/"
 ```
