@@ -1,6 +1,4 @@
 # Install FontForge
-# Install fonttools for Python to support woff 2.0:
-# pip install --user --upgrade fonttools[woff]
 # Add Font Forge bin directory to path.
 # Run:
 # fontforge -script svg2cssfont.py
