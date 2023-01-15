@@ -32,22 +32,27 @@ The following arguments can be passed after the `--script svg2cssfont.py` argume
                         Unicode index in hexadecimal form to start from, default: "EA01"
   -src SRCDIR, --srcdir SRCDIR
                         path to the directory with SVG files, default: "./src/"
-  -fp FONTPATH, --fontpath FONTPATH
-                        relative path from CSS file to the font files, default: "../fonts/"
   -ff FONTFAMILY, --fontfamily FONTFAMILY
                         CSS font family name, default: "Icon Font"
-  -css CSSFILE, --cssfile CSSFILE
-                        name of the CSS file, default: "font.css"
-  -wf1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the WOFF v1 file, must have ".woff" extension, default: "font.woff"
-  -wf2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the WOFF v2 file, must have ".woff2" extension, default: "font.woff2"
   -gc GENCSSCLASS, --gencssclass GENCSSCLASS
                         name for the generic CSS class shared by all element instances, default: "ico"
   -pr CSSCLASSPREFIX, --cssclassprefix CSSCLASSPREFIX
                         prefix for the individual font CSS classes, default: "ico-"
-  -dc DESTCSSDIR, --destcssdir DESTCSSDIR
-                        destination directory where to put CSS files, default: "./dist/css/"
-  -df DESTFONTDIR, --destfontdir DESTFONTDIR
-                        destination directory where to put font files, default: "./dist/fonts/"
+  -csc CSSFILE, --cssfile CSSFILE
+                        path to the generated CSS file, default: "./dist/css/font.css"
+  -w1 WOFF1FILE, --woff1file WOFF1FILE
+                        name of the WOFF v1 file, must have ".woff" extension, default: "./dist/fonts/font.woff"
+  -w2 WOFF2FILE, --woff2file WOFF2FILE
+                        name of the WOFF v2 file, must have ".woff2" extension, default: "./dist/fonts/font.woff2"
+  -htm HTMLFILE, --htmlfile HTMLFILE
+                        path to an HTML preview file listing all characters, default: "./dist/preview.html"
+  -fs PREVIEWFONTSIZE, --previewfontsize PREVIEWFONTSIZE
+                        default font size for HTML preview file, default: "24px"
+  -cfp CSS2FONTPATH, --css2fontpath CSS2FONTPATH
+                        override relative path from CSS file to the font files; if empty then will be calculated based
+                        on output file paths; pass "./" to override to same directory
 ```
+
+## Sample call with arguments
+
+fontforge --script svg2cssfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --destcssdir "./" --destfontdir "./" --gencssclass "ff" --cssclassprefix "ff-"

@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>Font preview</title>
+        <link href="css/font.css" rel="stylesheet">
+        <style>
+            body {
+                background-color: #f3f2f1;
+                text-align: center;
+                padding: 1rem;
+                margin: 0;
+            }
+            #font-list {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center; 
+                margin-top: 1rem;
+                gap: 1rem;
+            }
+            #font-list > div {
+                background-color: #fff;
+                box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+                padding: 20px;
+            }
+            #font-list > div > span {
+                font-size: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+    Icon font size: <input type="text" id="font-size" value="24px" onchange="document.getElementById('font-list').style.fontSize=this.value">
+    <div id="font-list" style="font-size: 24px; ">
+
+<div><i class="ico ico-bookmark"></i><br><span>bookmark</span></div>
+<div><i class="ico ico-settings"></i><br><span>settings</span></div>
+</div>
+</body>        
