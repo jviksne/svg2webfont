@@ -1,7 +1,6 @@
 # Install FontForge
-# Add Font Forge bin directory to path.
-# Run:
-# fontforge -script svg2webfont.py
+# Add FontForge bin directory to path.
+# Run: fontforge -script svg2webfont.py
 
 import fontforge
 import argparse
