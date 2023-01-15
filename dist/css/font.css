@@ -18,7 +18,12 @@
   font-family: "Icon Font";
 }
 
-.ico-settings::before {
+.ico-github::before {
   content: "\ea02";
+  font-family: "Icon Font";
+}
+
+.ico-settings::before {
+  content: "\ea03";
   font-family: "Icon Font";
 }
