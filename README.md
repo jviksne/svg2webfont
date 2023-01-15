@@ -1,10 +1,13 @@
 # svg2cssfont
+
  FontForge Python script for converting a list of SVG files into CSS web font for use as icons.
  
  Each SVG file will be interpreted as representing a single character with the file name (without extension) becoming a CSS class with a custom ("ico-" by default) prefix. The SVG files do not need to be structed in any specific way.
 
  Script generates a CSS file and two font files in WOFF and WOFF 2.0 formats that need to be uploaded to the web server's public directory. To use the fonts as icons the CSS file needs to be included. Sample icon HTML tag format:
  `<i class="ico ico-settings"></i>`
+
+ Preview of all icons: https://jviksne.github.io/feather-icon-css-font/preview.html
 
 ## Setup and usage
 
@@ -55,4 +58,4 @@ The following arguments can be passed after the `--script svg2cssfont.py` argume
 
 ## Sample call with arguments
 
-fontforge --script svg2cssfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --destcssdir "./" --destfontdir "./" --gencssclass "ff" --cssclassprefix "ff-"
+fontforge --script svg2cssfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-"
