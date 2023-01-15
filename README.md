@@ -14,7 +14,7 @@ By default the script generates also a preview HTML file that lists all of the i
 1. Install FontForge https://fontforge.org/ (consider donation https://fontforge.org/en-US/donate/ ).
 2. Add "bin" directory (e.g. "C:\Program Files (x86)\FontForgeBuilds\bin") of FontForge installation to system path (optional).
 3. Download this repository and extract to some directory.
-4. Replace the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) SVG files in "src" directory with the final list of SVG files, each file representing a single character. Files must have ".svg" extension. File name (without extensions) will be used as the name of the CSS class for the specific character. 
+4. Replace the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) SVG files in "src" directory with the final list of SVG files, each file representing a single character. Files must have ".svg" extension. File name (without extensions) will be used as the name of the CSS class for the specific character.
 5. Delete the sample CSS and font files from "dist/css" and "dist/font" directories.
 6. Run the script from command line with the following command (optional arguments listed below):
 `fontforge --script svg2cssfont.py`
