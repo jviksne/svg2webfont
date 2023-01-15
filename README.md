@@ -7,7 +7,7 @@ Each SVG file will be interpreted as representing a single character with the fi
 Script generates a CSS file and two font files in WOFF and WOFF 2.0 formats that need to be uploaded to the web server's public directory. To use the fonts as icons the CSS file needs to be included. Sample icon HTML tag format:
 `<i class="ico ico-settings"></i>`
 
-By default the script generates also a preview HTML file that lists all of the icons. Preview file for the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) icons included in the repository: https://jviksne.github.io/svg2cssfont/preview.html
+By default the script generates also a preview HTML file that lists all of the icons. Preview file for the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) icons included in the repository: https://jviksne.github.io/svg2cssfont/dist/preview.html
 
 ## Setup and usage
 
