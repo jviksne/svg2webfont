@@ -1,4 +1,4 @@
-# svg2cssfont
+# svg2webfont
 
 FontForge Python script for converting a list of SVG files into CSS web font for use as icons.
 
@@ -7,7 +7,7 @@ Each SVG file will be interpreted as representing a single character with the fi
 Script generates a CSS file and two font files in WOFF and WOFF 2.0 formats that need to be uploaded to the web server's public directory. To use the fonts as icons the CSS file needs to be included. Sample icon HTML tag format:
 `<i class="ico ico-settings"></i>`
 
-By default the script generates also a preview HTML file that lists all of the icons. Preview file for the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) icons included in the repository: https://jviksne.github.io/svg2cssfont/dist/preview.html
+By default the script generates also a preview HTML file that lists all of the icons. Preview file for the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) icons included in the repository: https://jviksne.github.io/svg2webfont/dist/preview.html
 
 ## Setup and usage
 
@@ -17,7 +17,7 @@ By default the script generates also a preview HTML file that lists all of the i
 4. Replace the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) SVG files in "src" directory with the final list of SVG files, each file representing a single character. Files must have ".svg" extension. File name (without extensions) will be used as the name of the CSS class for the specific character.
 5. Delete the sample CSS and font files from "dist/css" and "dist/font" directories.
 6. Run the script from command line with the following command (optional arguments listed below):
-`fontforge --script svg2cssfont.py`
+`fontforge --script svg2webfont.py`
 7. Copy the directories with generated files under "dist" directory to the public dictory of your web server.
 8. Include the css file into your HTML files:
 `<link href="/css/font.css" rel="stylesheet">`
@@ -27,7 +27,7 @@ Note that by default the css file expected the font files to be located under "f
 
 ## Arguments
 
-The following arguments can be passed after the `--script svg2cssfont.py` argument:
+The following arguments can be passed after the `--script svg2webfont.py` argument:
 
 ```
   -h, --help            show this help message and exit
@@ -61,5 +61,5 @@ The following arguments can be passed after the `--script svg2cssfont.py` argume
 The following call will generate all files in the same (current) directory with the generic CSS class named "ff" and all icon CSS classes having "ff-" prefix:
 
 ```
-fontforge --script svg2cssfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-"
+fontforge --script svg2webfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-"
 ```

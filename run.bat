@@ -1,1 +1,1 @@
-fontforge --script svg2cssfont.py
+fontforge --script svg2webfont.py
