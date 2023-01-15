@@ -212,11 +212,11 @@ for svg_file in svg_files:
 
     bbox = glyph.boundingBox()
 
-    # Center horizontally
+    # Find horizontal center
     center = (bbox[2] - bbox[0])/2
 
-    # move the character to the center of the width
-    glyph.transform((1,0,0,1,-center,0))
+    # Center the character to both sides around 0
+    glyph.transform((1, 0, 0, 1, center - bbox[2], 0))
     
     if css != None:
         css.append(\
