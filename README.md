@@ -52,8 +52,12 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -fs PREVIEWFONTSIZE, --previewfontsize PREVIEWFONTSIZE
                         default font size for HTML preview file, default: "24px"
   -cfp CSS2FONTPATH, --css2fontpath CSS2FONTPATH
-                        override relative path from CSS file to the font files; if empty then will be calculated based
-                        on output file paths; pass "./" to override to same directory
+                        override relative path from CSS file to the font files; if empty then will be calculated based on output file paths; pass "./" to override to same directory
+  -w WIDTH, --width WIDTH
+                        character width in font units, besides a number can be 'auto' for auto width or 'max' for width to match the maximum width or height, default 'auto'
+  -sw SEPARATION, --separation SEPARATION
+                        separation width in font units between characters, default 0
+  -d, --debug           print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font
 ```
 
 ## Sample call with arguments

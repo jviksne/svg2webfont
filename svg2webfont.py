@@ -72,6 +72,9 @@ parser.add_argument("-w2", "--woff2file", help="name of the WOFF v2 file, must h
 parser.add_argument("-htm", "--htmlfile", help="path to an HTML preview file listing all characters, default: \"./dist/preview.html\"", default="./dist/preview.html", type=str)
 parser.add_argument("-fs", "--previewfontsize", help="default font size for HTML preview file, default: \"24px\"", default="24px", type=str)
 parser.add_argument("-cfp", "--css2fontpath", help="override relative path from CSS file to the font files; if empty then will be calculated based on output file paths; pass \"./\" to override to same directory", default="", type=str)
+parser.add_argument("-w", "--width", help="character width in font units, besides a number can be 'auto' for auto width or 'max' for width to match the maximum width or height, default 'auto'", default="auto", type=str)
+parser.add_argument("-sw", "--separation", help="separation width in font units between characters, default 0", default=0, type=int)
+parser.add_argument("-d", "--debug", help="print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font", action="store_true")
 args = parser.parse_args()
 
 if args.start == "":
@@ -94,6 +97,15 @@ if args.woff2file != "":
 
 if args.htmlfile != "":
     assert_dst_file_path(args.htmlfile, "htmlfile")
+
+if args.width != "auto" and args.width != "max":
+    try:
+        adv_width = int(args.width)
+    except ValueError:
+        print("width %s is not a number" % (args.width,))
+        sys.exit(-1)
+else:
+    adv_width = None
 
 # Format font-face src property value
 if args.cssfile != "":
@@ -135,6 +147,7 @@ if args.cssfile != "":
     text-rendering: auto;
     display: inline-block;
     font-variant: normal;
+    -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
 """ % (fontfamily, ",\n       ".join(src), args.gencssclass)]
@@ -197,6 +210,9 @@ svg_files = os.listdir(svg_dir)
 svg_files = [f for f in svg_files if f.endswith('.svg')]
 svg_files.sort()
 
+max_width = 0.0
+max_height = 0.0
+
 # Iterate through the list of SVG files
 for svg_file in svg_files:
 
@@ -210,13 +226,27 @@ for svg_file in svg_files:
     # Import the svg
     glyph.importOutlines(os.path.join(svg_dir, svg_file))
 
+    # Set name
+    glyph.glyphname = char_name
+
     bbox = glyph.boundingBox()
 
-    # Find horizontal center
-    center = (bbox[2] - bbox[0])/2
+    width = float(bbox[2] - bbox[0])
+    height = float(bbox[3] - bbox[1])
 
-    # Center the character to both sides around 0
-    glyph.transform((1, 0, 0, 1, center - bbox[2], 0))
+    if width > max_width:
+        max_width = width
+    if height > max_height:
+        max_height = height
+
+    if args.width == 'auto':
+        # Center the character to both sides around 0
+        glyph.transform((1, 0, 0, 1, int(round(float(-bbox[0]) - width/2.0)), 0))
+    elif adv_width != None:
+        glyph.transform((1, 0, 0, 1, int(round((adv_width - width)/2.0 - float(bbox[0]))), 0))
+        # Set the new width after the transform because transform would transform also the width
+        glyph.width = adv_width
+        bbox2 = glyph.boundingBox()
     
     if css != None:
         css.append(\
@@ -236,8 +266,23 @@ for svg_file in svg_files:
 # Set the font's encoding to Unicode
 font.encoding = "unicode"
 
-#font.selection.all()
-#font.centerInWidth()
+if args.width == 'auto':
+    font.selection.all()
+    font.autoWidth(args.separation)
+elif args.width == 'max':
+    if args.debug:
+        print("max_height=%d, max_width=%d" % (max_height, max_width))
+    if max_height > max_width:
+        max_width = max_height
+    for glyph in font.glyphs():
+        glyph.transform((1, 0, 0, 1, int(round((max_width - width)/2.0 - float(bbox[0]))), 0))
+        # Set the new width after the transform because transform would transform also the width
+        glyph.width = int(round(max_width))
+
+if args.debug:
+    for glyph in font.glyphs():
+        bbox = glyph.boundingBox()
+        print("%s, adv_width=%d, bbox[0]=%d, bbox[2]=%d" % (glyph.glyphname, glyph.width, bbox[0], bbox[2]))
 
 # Generate the css file
 if args.cssfile != "":

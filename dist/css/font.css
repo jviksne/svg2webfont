@@ -10,6 +10,7 @@
     text-rendering: auto;
     display: inline-block;
     font-variant: normal;
+    -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
 
