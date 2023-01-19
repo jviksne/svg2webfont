@@ -53,10 +53,16 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
                         default font size for HTML preview file, default: "24px"
   -cfp CSS2FONTPATH, --css2fontpath CSS2FONTPATH
                         override relative path from CSS file to the font files; if empty then will be calculated based on output file paths; pass "./" to override to same directory
-  -w WIDTH, --width WIDTH
-                        character width in font units, besides a number can be 'auto' for auto width or 'max' for width to match the maximum width or height, default 'auto'
+  -vh HEIGHT, --height HEIGHT
+                        to what to align the SVG view-box height, can be 'em' for the whole em, 'ascdesc' for ascent-descent or a number, default 'ascdesc'
+  -min MINWIDTH, --minwidth MINWIDTH
+                        minimal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'
+  -max MAXWIDTH, --maxwidth MAXWIDTH
+                        maximal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'
   -sw SEPARATION, --separation SEPARATION
                         separation width in font units between characters, default 0
+  -em EMSIZE, --emsize EMSIZE
+                        custom em size, default 1000
   -d, --debug           print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font
 ```
 
@@ -65,5 +71,5 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
 The following call will generate all files in the same (current) directory with the generic CSS class named "ff" and all icon CSS classes having "ff-" prefix:
 
 ```
-fontforge --script svg2webfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-"
+fontforge --script svg2webfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-" --height "em"
 ```

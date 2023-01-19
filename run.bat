@@ -1,1 +1,1 @@
-fontforge --script svg2webfont.py
+fontforge --script svg2webfont.py --height "em"

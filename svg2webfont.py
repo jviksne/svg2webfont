@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import argparse
+import xml.etree.ElementTree as ET
 
 def assert_dst_file_path(filepath:str, param:str):
     
@@ -59,6 +60,38 @@ def format_font_file_src_css(font_file_fs_path:str, css_fs_path:str, override_ur
     
     return 'url("%s") format("%s")' % (esc_html_dq_str(url), esc_html_dq_str(css_format))
 
+def get_svg_viewbox(path):
+    tree = ET.parse(path)
+    root = tree.getroot()
+    if 'viewBox' in root.attrib:
+        parts = root.attrib['viewBox'].split()
+        if len(parts) == 4:
+            return [float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3])]
+    if 'width' in root.attrib and 'height' in root.attrib:
+        return [0.0, 0.0, float(root.attrib['width']), float(root.attrib['height'])]
+    return None
+
+def transformXY(matrix, xy):
+    a, b, c, d, e, f = matrix
+    x, y = xy
+
+    x1 = a*x + c*y + e
+    y1 = b*x + d*y + f
+    return (x1, y1)
+
+def transform(matrix, xywh):
+    x1, y1 = transformXY(matrix, (xywh[0], xywh[1]))
+    x2, y2 = transformXY(matrix, (xywh[0] + xywh[2], xywh[1] + xywh[3]))
+    return (x1, y1, x2 - x1, y2 - y1)
+
+def print_debug(info:str, char_name:str = None):
+    global args
+    if args.debug:
+        if char_name != None:
+            print("%s: %s" % (char_name, info))
+        else:
+            print(info)
+
 # Parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-st", "--start", help="Unicode index in hexadecimal form to start from, default: \"EA01\"", default="EA01", type=str)
@@ -72,8 +105,11 @@ parser.add_argument("-w2", "--woff2file", help="name of the WOFF v2 file, must h
 parser.add_argument("-htm", "--htmlfile", help="path to an HTML preview file listing all characters, default: \"./dist/preview.html\"", default="./dist/preview.html", type=str)
 parser.add_argument("-fs", "--previewfontsize", help="default font size for HTML preview file, default: \"24px\"", default="24px", type=str)
 parser.add_argument("-cfp", "--css2fontpath", help="override relative path from CSS file to the font files; if empty then will be calculated based on output file paths; pass \"./\" to override to same directory", default="", type=str)
-parser.add_argument("-w", "--width", help="character width in font units, besides a number can be 'auto' for auto width or 'max' for width to match the maximum width or height, default 'auto'", default="auto", type=str)
+parser.add_argument("-vh", "--height", help="to what to align the SVG view-box height, can be 'em' for the whole em, 'ascdesc' for ascent-descent or a number, default 'ascdesc'", default="ascdesc", type=str)
+parser.add_argument("-min", "--minwidth", help="minimal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'", default="auto", type=str)
+parser.add_argument("-max", "--maxwidth", help="maximal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'", default="auto", type=str)
 parser.add_argument("-sw", "--separation", help="separation width in font units between characters, default 0", default=0, type=int)
+parser.add_argument("-em", "--emsize", help="custom em size, default 1000", default=1000, type=int)
 parser.add_argument("-d", "--debug", help="print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font", action="store_true")
 args = parser.parse_args()
 
@@ -97,15 +133,6 @@ if args.woff2file != "":
 
 if args.htmlfile != "":
     assert_dst_file_path(args.htmlfile, "htmlfile")
-
-if args.width != "auto" and args.width != "max":
-    try:
-        adv_width = int(args.width)
-    except ValueError:
-        print("width %s is not a number" % (args.width,))
-        sys.exit(-1)
-else:
-    adv_width = None
 
 # Format font-face src property value
 if args.cssfile != "":
@@ -199,6 +226,46 @@ else:
 # Create a new font
 font = fontforge.font()
 
+font.em = args.emsize
+
+print_debug("font.em=%s, font.ascent=%s, font.descent=%s," % (font.em, font.ascent, font.descent))
+
+if args.height == "ascdesc":
+    max_viewbox_height = font.ascent-font.descent
+elif args.height == "em":
+    max_viewbox_height = args.emsize
+else:
+    try:
+        max_viewbox_height = int(args.height)
+    except ValueError:
+        print("height %s is not a number" % (args.height,))
+        sys.exit(-1)
+
+print_debug("max_viewbox_height: %s" % (max_viewbox_height,))
+
+
+if args.minwidth == "em":
+    adv_min_width = font.em
+elif args.minwidth != "auto":
+    try:
+        adv_min_width = int(args.minwidth)
+    except ValueError:
+        print("minwidth %s is not a number" % (args.minwidth,))
+        sys.exit(-1)
+else:
+    adv_min_width = None
+
+if args.maxwidth == "em":
+    adv_max_width = font.em
+elif args.maxwidth != "auto":
+    try:
+        adv_max_width = int(args.maxwidth)
+    except ValueError:
+        print("maxwidth %s is not a number" % (args.maxwidth,))
+        sys.exit(-1)
+else:
+    adv_max_width = None
+
 # Set the starting Unicode value
 curr_unicode = int(args.start, 16)
 
@@ -216,37 +283,102 @@ max_height = 0.0
 # Iterate through the list of SVG files
 for svg_file in svg_files:
 
-    char_name = svg_file[0:-len('.svg')]
-    if len(char_name) == 0:
+    glyph_name = svg_file[0:-len('.svg')]
+    if len(glyph_name) == 0:
         continue
 
     # Create a glyph
     glyph = font.createChar(curr_unicode)
 
+    svg_file_path = os.path.join(svg_dir, svg_file)
+
     # Import the svg
-    glyph.importOutlines(os.path.join(svg_dir, svg_file))
+    glyph.importOutlines(svg_file_path, scale=False) # Some paths do not get scaled by importOutlines with scale=True
 
     # Set name
-    glyph.glyphname = char_name
+    glyph.glyphname = glyph_name
+
+    # Try to read the viewbox info from the SVG
+    viewbox = get_svg_viewbox(svg_file_path)
+    print_debug('svg viewbox read: %s' % (viewbox,), glyph_name)
+
+    # Get the bounding box in the glyph
+    bbox = glyph.boundingBox()
+    print_debug("bbox before scale: %s, width: %d, height: %d" % (bbox, bbox[2]-bbox[0], bbox[3]-bbox[1]), glyph_name)
+
+    # If viewbox could not be imported from the XML, use the bounding box
+    if viewbox == None:
+        viewbox = [float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])]
+    else:
+        # If viewbox could be imported from the XML, reposition it        
+        # (0, 0) point of SVG is positioned at position (0, font.ascent)
+        viewbox[1] = float(font.ascent) - (viewbox[3] - viewbox[1])
+        viewbox[3] = float(font.ascent)
+
+    print_debug('svg viewbox adjusted to: %s' % (viewbox,), glyph_name)
+
+    initial_viewbox_width = viewbox[2] - viewbox[0]
+    initial_viewbox_height = viewbox[3] - viewbox[1]
+
+    # Some paths do not get scaled by importOutlines with scale=True
+    # (TODO: figure out why exactly - possibly if they lack viewBox)
+    # so scale manually to fit into em square
+
+    # Calculate the scale
+    scale = float(max_viewbox_height) / max(float(initial_viewbox_width), float(initial_viewbox_height))
+
+    # Generate PostScript transformation matrix for scaling
+    matrix = (scale, 0, 0,
+              scale, 0, 0)
+    print_debug("scale matrix: %s" % (matrix,), glyph_name)
+
+    # Apply scaling matrix to outlines
+    glyph.transform(matrix)
+
+    # Apply scaling matrix to viewBox
+    viewbox = transform(matrix, viewbox)
 
     bbox = glyph.boundingBox()
 
-    width = float(bbox[2] - bbox[0])
-    height = float(bbox[3] - bbox[1])
+    # Calculate the scaled dimensions
+    outline_width = bbox[2] - bbox[0]
+    outline_height = bbox[3] - bbox[1]
 
-    if width > max_width:
-        max_width = width
-    if height > max_height:
-        max_height = height
+    viewbox_width = viewbox[2] - viewbox[0]
+    viewbox_height = viewbox[3] - viewbox[1]
 
-    if args.width == 'auto':
-        # Center the character to both sides around 0
-        glyph.transform((1, 0, 0, 1, int(round(float(-bbox[0]) - width/2.0)), 0))
-    elif adv_width != None:
-        glyph.transform((1, 0, 0, 1, int(round((adv_width - width)/2.0 - float(bbox[0]))), 0))
-        # Set the new width after the transform because transform would transform also the width
-        glyph.width = adv_width
-        bbox2 = glyph.boundingBox()
+    print_debug("bbox after scale: %s, width: %d, height: %d" % (bbox, outline_width, outline_height), glyph_name)
+    print_debug("viewbox after scale: %s, width: %d, height: %d" % (viewbox, viewbox_width, viewbox_height), glyph_name)
+
+    # Calculate the advance width of the font (the space it takes, not the space it is drawn in)
+    advance_width = outline_width
+    if adv_min_width != None and advance_width < adv_min_width:
+        advance_width = adv_min_width
+    
+    if adv_max_width != None and advance_width > adv_max_width:
+        advance_width = adv_max_width
+
+    print_debug("advance_width=%s" % (advance_width,), glyph_name) 
+
+    # Move the center of the viewbox to be in the center of the advance_width horizontally
+    x_move = (float(advance_width) - viewbox_width) / 2.0 - viewbox[0]
+
+    # Move the center of the viewbox to be in the center of the em vertically
+    y_move = (float(font.em) - viewbox_height) / 2.0 - viewbox[1]
+
+    print_debug("x_move: %d, y_move: %d" % (x_move, y_move), glyph_name)
+
+    matrix = (1, 0, 0,
+              1, x_move, y_move)
+    print_debug("move matrix: %s" % (matrix,), glyph_name)
+
+    glyph.transform(matrix)
+
+    # Set the new width after the transform because transform would transform also the width
+    glyph.width = int(round(advance_width))
+
+    bbox = glyph.boundingBox()
+    print_debug("bbox after move: %s" % (bbox,), glyph_name)
     
     if css != None:
         css.append(\
@@ -254,11 +386,11 @@ for svg_file in svg_files:
   content: "\\%s";
   font-family: "%s";
 }
-""" % (args.cssclassprefix, char_name, hex(curr_unicode)[2:], fontfamily))
+""" % (args.cssclassprefix, glyph_name, hex(curr_unicode)[2:], fontfamily))
 
         if html != None:
             html.append('<div><i class="%s %s%s"></i><br><span>%s</span></div>' % (
-                args.gencssclass, args.cssclassprefix, char_name, char_name))
+                args.gencssclass, args.cssclassprefix, glyph_name, glyph_name))
 
     # Increment the Unicode value for the next character
     curr_unicode += 1
@@ -266,6 +398,7 @@ for svg_file in svg_files:
 # Set the font's encoding to Unicode
 font.encoding = "unicode"
 
+'''
 if args.width == 'auto':
     font.selection.all()
     font.autoWidth(args.separation)
@@ -275,14 +408,16 @@ elif args.width == 'max':
     if max_height > max_width:
         max_width = max_height
     for glyph in font.glyphs():
-        glyph.transform((1, 0, 0, 1, int(round((max_width - width)/2.0 - float(bbox[0]))), 0))
+        #glyph.transform((1, 0, 0, 1, int(round((max_width - initial_viewbox_width)/2.0 - float(bbox[0]))), 0))
+        glyph.transform((1, 0, 0, 1, int(round((max_width - initial_viewbox_width)/2.0 - float(bbox[0]))), 0))
         # Set the new width after the transform because transform would transform also the width
         glyph.width = int(round(max_width))
-
+'''
 if args.debug:
+    print("font.em: %s, font.ascent=%s, font.descent=%s," % (font.em, font.ascent, font.descent))
     for glyph in font.glyphs():
         bbox = glyph.boundingBox()
-        print("%s, adv_width=%d, bbox[0]=%d, bbox[2]=%d" % (glyph.glyphname, glyph.width, bbox[0], bbox[2]))
+        print("%s, adv_width=%d, bbox=%s" % (glyph.glyphname, glyph.width, bbox))
 
 # Generate the css file
 if args.cssfile != "":
