@@ -91,5 +91,5 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
 The following call will generate all files in the same (current) directory with the generic CSS class named "ff" and all icon CSS classes having "ff-" prefix:
 
 ```
-fontforge --script svg2webfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-" --height "em"
+fontforge --script svg2webfont.py --fontfamily "Feather Icons" --cssfile "feather-icons.css" --woff1file "feather-icons.woff" --woff2file "feather-icons.woff2" --htmlfile "preview.html" --gencssclass "ff" --cssclassprefix "ff-"
 ```
