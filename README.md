@@ -32,38 +32,58 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
 ```
   -h, --help            show this help message and exit
   -st START, --start START
-                        Unicode index in hexadecimal form to start from, default: "EA01"
+                        Unicode index in hexadecimal form to start from, default: 'EA01'
   -src SRCDIR, --srcdir SRCDIR
-                        path to the directory with SVG files, default: "./src/"
+                        path to the directory with SVG files, default: './src/'
   -ff FONTFAMILY, --fontfamily FONTFAMILY
-                        CSS font family name, default: "Icon Font"
+                        CSS font family name, default: 'Icon Font'
   -gc GENCSSCLASS, --gencssclass GENCSSCLASS
-                        name for the generic CSS class shared by all element instances, default: "ico"
+                        name for the generic CSS class shared by all element instances, default: 'ico'
   -pr CSSCLASSPREFIX, --cssclassprefix CSSCLASSPREFIX
-                        prefix for the individual font CSS classes, default: "ico-"
+                        prefix for the individual font CSS classes, default: 'ico-'
   -csc CSSFILE, --cssfile CSSFILE
-                        path to the generated CSS file, default: "./dist/css/font.css"
+                        path to the generated CSS file, default: './dist/css/font.css'
   -w1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the WOFF v1 file, must have ".woff" extension, default: "./dist/fonts/font.woff"
+                        name of the WOFF v1 file, must have '.woff' extension, default: './dist/fonts/font.woff'
   -w2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the WOFF v2 file, must have ".woff2" extension, default: "./dist/fonts/font.woff2"
+                        name of the WOFF v2 file, must have '.woff2' extension, default: './dist/fonts/font.woff2'
   -htm HTMLFILE, --htmlfile HTMLFILE
-                        path to an HTML preview file listing all characters, default: "./dist/preview.html"
+                        path to an HTML preview file listing all characters, default: './dist/preview.html'
   -fs PREVIEWFONTSIZE, --previewfontsize PREVIEWFONTSIZE
-                        default font size for HTML preview file, default: "24px"
+                        default font size for HTML preview file, default: '24px'
   -cfp CSS2FONTPATH, --css2fontpath CSS2FONTPATH
-                        override relative path from CSS file to the font files; if empty then will be calculated based on output file paths; pass "./" to override to same directory
-  -vh HEIGHT, --height HEIGHT
-                        to what to align the SVG view-box height, can be 'em' for the whole em, 'ascdesc' for ascent-descent or a number, default 'ascdesc'
+                        override relative path from CSS file to the font files; if empty then will be calculated based
+                        on output file paths; pass './' to override to same directory
+  -upm UPMSIZE, --upmsize UPMSIZE
+                        units per em, default 1000
+  -asc ASCENT, --ascent ASCENT
+                        ascent size (distance from baseline to top), default 800
+  -des DESCENT, --descent DESCENT
+                        descent size (distance from baseline to bottom), default 200
+  -sc SCALE, --scale SCALE
+                        how to scale the SVG view-box, can be 'in_em','over_em','ascdesc', 'no' or a float scale
+                        factor number, default: 'in_em'
+  -ha HALIGN, --halign HALIGN
+                        how to align the scaled SVG view-box relative to advance width horizontally, can be
+                        'center','left','right' or a number interpreted as a center in font units, default: 'center'
+  -va VALIGN, --valign VALIGN
+                        how to align the scaled SVG view-box vertically, can be 'base_em_center',
+                        'ascdesc_center','baseline','descent' or a number interpreted as a center in font units,
+                        default: 'ascdesc_center'
+  -x XMOVE, --xmove XMOVE
+                        by how many units to move the scaled and aligned SVG view-box horizontally, default: 0
+  -y YMOVE, --ymove YMOVE
+                        by how many units to move the scaled and aligned SVG view-box vertically, default: 0
   -min MINWIDTH, --minwidth MINWIDTH
-                        minimal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'
+                        minimal advance width (how much space the font uses horizontally) in font units, besides a
+                        number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'
   -max MAXWIDTH, --maxwidth MAXWIDTH
-                        maximal advance width (how much space the font takes) in font units, besides a number can be 'auto' to match the drawing width or 'em', default 'auto'
+                        maximal advance width (how much space the font uses horizontally) in font units, besides a
+                        number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'
   -sw SEPARATION, --separation SEPARATION
                         separation width in font units between characters, default 0
-  -em EMSIZE, --emsize EMSIZE
-                        custom em size, default 1000
-  -d, --debug           print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font
+  -d, --debug           print additional information (e.g. size of each character in font units) helpful for debugging
+                        and tuning the font
 ```
 
 ## Sample call with arguments

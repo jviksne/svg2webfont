@@ -23,13 +23,15 @@
                 padding: 20px;
             }
             #font-list > div > span {
+                display: inline-block;
+                padding-top: 0.5rem;
                 font-size: 1rem;
             }
         </style>
     </head>
     <body>
     Icon font size: <input type="text" id="font-size" value="24px" onchange="document.getElementById('font-list').style.fontSize=this.value">
-    <div id="font-list" style="font-size: 24px; ">
+    <div id="font-list" style="font-size: 24px;">
 
 <div><i class="ico ico-bookmark"></i><br><span>bookmark</span></div>
 <div><i class="ico ico-github"></i><br><span>github</span></div>
