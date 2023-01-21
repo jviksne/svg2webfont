@@ -1,0 +1,17 @@
+{
+  "bookmark": {
+    "scale": 10.5,
+    "halign": "left",
+    "valign": "baseline"
+  },
+  "github": {
+    "xmove": 100,
+    "ymove": -100,
+    "code": "EA05"
+  },
+  "settings": {
+    "minwidth": "em",
+    "maxwidth": "em",
+    "separation": 10
+  }
+}

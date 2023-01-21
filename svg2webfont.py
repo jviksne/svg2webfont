@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import xml.etree.ElementTree as ET
+import json
 
 def assert_dst_file_path(filepath:str, param:str):
     
@@ -20,22 +21,42 @@ def assert_dst_file_path(filepath:str, param:str):
         print('directory %s of %s does not exist or is not a valid directory' % (path, param,))
         sys.exit(-1)
 
-def parse_int_arg(param:str):
-    global args
+def get_arg_or_config(glyph_name, param: str):
+    global args, config
+
+    if glyph_name in config and param in config[glyph_name]:
+        return  config[glyph_name][param]
+    return vars(args)[param]
+
+def get_int_arg_or_config(glyph_name, param: str):
+    global args, config
+
+    if config != None:
+        if glyph_name in config and param in config[glyph_name] and config[glyph_name][param] != '':
+            return parse_int_param(param, config[glyph_name][param])
+    return parse_int_param(param, vars(args)[param])
+
+def get_float_arg_or_config(glyph_name, param: str):
+    global args, config
+
+    if config != None:
+        if glyph_name in config and param in config[glyph_name] and config[glyph_name][param] != '':
+            return parse_float_param(param, config[glyph_name][param])
+    return parse_float_param(param, vars(args)[param])
+
+
+def parse_int_param(param, s:str|int):
     try:
-        v = vars(args)
-        return int(v[param])
+        return int(s)
     except ValueError:
-        print('bad %s value: %s' % (param, v[param]))
+        print('bad %s value: %s' % (param, s))
         sys.exit(-1)
 
-def parse_float_arg(param:str):
-    global args
+def parse_float_param(param, s:str|float|int):
     try:
-        v = vars(args)
-        return float(v[param])
+        return float(s)
     except ValueError:
-        print('bad %s value: %s' % (param, v[param]))
+        print('bad %s value: %s' % (param, s))
         sys.exit(-1)
 
 def get_rel_path(from_file:str, to_file:str, to_url:bool):
@@ -137,12 +158,27 @@ parser.add_argument('-min', '--minwidth', help="minimal advance width (how much 
 parser.add_argument('-max', '--maxwidth', help="maximal advance width (how much space the font uses horizontally) in font units, besides a number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'", default='auto', type=str)
 parser.add_argument('-sw', '--separation', help='separation width in font units between characters, default 0', default=0, type=int)
 
+parser.add_argument('-cf', '--configfile', help='path to a JSON configuration file for overriding parameter values for individual glyphs', type=str, default="")
+parser.add_argument('-c', '--config', help='JSON configuration text for overriding parameter values for individual glyphs', type=str, default="")
+
 parser.add_argument('-d', '--debug', help='print additional information (e.g. size of each character in font units) helpful for debugging and tuning the font', action='store_true')
 args = parser.parse_args()
 
 if args.start == '':
     print('-st or --start is required')
     sys.exit(-1)
+
+if args.config != "" and args.configfile != "":
+    print('it is not allowed to specify both configfile and config')
+    sys.exit(-1)
+elif args.config != "":
+    print(args.config)
+    config = json.loads(args.config)
+elif args.configfile != "":
+    with open(args.configfile, "r") as file:
+        config = json.load(file)
+else:
+    config = {}
 
 # Ensure all directories exist
 if not os.path.exists(args.srcdir):
@@ -261,31 +297,18 @@ font.descent = args.descent
 
 print_debug('font.em=%s, font.ascent=%s, font.descent=%s,' % (font.em, font.ascent, font.descent))
 
-
-if args.minwidth == 'em':
-    adv_min_width = font.em
-elif args.minwidth != 'auto':
-    try:
-        adv_min_width = int(args.minwidth)
-    except ValueError:
-        print('minwidth %s is not a number' % (args.minwidth,))
-        sys.exit(-1)
-else:
-    adv_min_width = None
-
-if args.maxwidth == 'em':
-    adv_max_width = font.em
-elif args.maxwidth != 'auto':
-    try:
-        adv_max_width = int(args.maxwidth)
-    except ValueError:
-        print('maxwidth %s is not a number' % (args.maxwidth,))
-        sys.exit(-1)
-else:
-    adv_max_width = None
-
 # Set the starting Unicode value
-curr_unicode = int(args.start, 16)
+next_unicode = int(args.start, 16)
+
+# Initi used Unicode value dict
+used_unicodes = {}
+for glyph_name in config:
+    if 'code' in config[glyph_name]:
+        try:
+            used_unicodes[int(config[glyph_name]['code'], 16)] = True
+        except ValueError:
+            print('bad character code %s specified for %s in configuration' % (config[glyph_name]['code'], glyph_name))
+            sys.exit(-1)
 
 # Get the list of SVG files in the directory
 svg_dir = args.srcdir
@@ -304,6 +327,14 @@ for svg_file in svg_files:
     glyph_name = svg_file[0:-len('.svg')]
     if len(glyph_name) == 0:
         continue
+
+    if config != None and glyph_name in config and 'code' in config[glyph_name]:
+        curr_unicode = int(config[glyph_name]['code'], 16)
+    else:
+        curr_unicode = next_unicode
+        while curr_unicode in used_unicodes:
+            curr_unicode += 1
+        next_unicode = curr_unicode + 1
 
     # Create a glyph
     glyph = font.createChar(curr_unicode)
@@ -351,16 +382,17 @@ for svg_file in svg_files:
     # Set or calculate the scale
 
     # Use exact scaling factor if such is specified
-    if args.scale == 'in_em': # touch em from inside
+    scale = get_arg_or_config(glyph_name, "scale")
+    if scale == 'in_em': # touch em from inside
         scale = float(font.em) / max(svg_viewbox_width, svg_viewbox_height)
-    elif args.scale == 'over_em': # touch em from outside
+    elif scale == 'over_em': # touch em from outside
         scale = float(font.em) / min(svg_viewbox_width, svg_viewbox_height)
-    elif args.scale == 'in_ascdesc':
+    elif scale == 'in_ascdesc':
         scale = float(font)
-    elif args.scale == 'over_ascdesc':
+    elif scale == 'over_ascdesc':
         scale = max(float(font.em) / svg_viewbox_width, float(font.em) / svg_viewbox_height)
-    elif args.scale != 'no' and args.scale != '':
-        scale = parse_int_arg('scale')
+    elif scale != 'no' and scale != '':
+        scale = parse_int_param('scale', scale)
     else:
         scale = None
     #scale = float(max_viewbox_height) / max(float(svg_viewbox_width), float(svg_viewbox_height))
@@ -390,6 +422,22 @@ for svg_file in svg_files:
     print_debug('viewbox after scale: %s, width: %d, height: %d' % (svg_viewbox, scaled_viewbox_width, scaled_viewbox_height), glyph_name)
 
     # Calculate the advance width of the font (the space it takes, not the space it is drawn in)
+    adv_min_width = get_arg_or_config(glyph_name, "minwidth")
+    if adv_min_width == 'em':
+        adv_min_width = font.em
+    elif adv_min_width == 'auto':
+        adv_min_width = None
+    else:
+        adv_min_width = parse_int_param("minwidth", adv_min_width)
+
+    adv_max_width = get_arg_or_config(glyph_name, "maxwidth")
+    if adv_max_width == 'em':
+        adv_max_width = font.em
+    elif adv_max_width == 'auto':
+        adv_max_width = None
+    else:
+        adv_max_width = parse_int_param("maxwidth", adv_max_width)
+
     advance_width = scaled_outline_width
     if adv_min_width != None and advance_width < adv_min_width:
         advance_width = adv_min_width
@@ -399,43 +447,45 @@ for svg_file in svg_files:
 
     print_debug('advance_width=%s' % (advance_width,), glyph_name) 
 
-    
-    if args.halign == 'center':
+    halign = get_arg_or_config(glyph_name, "halign")
+    if halign == 'center':
         # Move the center of the viewbox to be in the center of the advance_width horizontally
         x_move = (float(advance_width) - scaled_viewbox_width) / 2.0 - svg_viewbox[0]
-    elif args.halign == 'right':
+    elif halign == 'right':
         x_move = float(advance_width) - svg_viewbox[2]
-    elif args.halign == 'left':
+    elif halign == 'left':
         x_move = -svg_viewbox[0]
-    elif args.halign != '':
-        center = parse_int_arg('halign')
+    elif halign != '':
+        center = parse_int_param('halign', halign)
         x_move = -svg_viewbox[0] + center + scaled_viewbox_width / 2.0
     else:
         x_move = 0
 
-    x_move += args.xmove    
+    x_move += get_int_arg_or_config(glyph_name, "xmove")
 
     # Move the center of the viewbox to be in the center of the em vertically
-    if args.valign == 'ascdesc_center':
+    valign = get_arg_or_config(glyph_name, "valign")
+    if valign == 'ascdesc_center':
         center = float(font.ascent) - (float(font.ascent) + float(font.descent)) / 2.0
         y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0
-    elif args.valign == 'base_em_center':
+    elif valign == 'base_em_center':
         center = float(font.em) / 2.0
         y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0
-    elif args.valign == 'baseline':
+    elif valign == 'baseline':
         y_move = -svg_viewbox[1]
-    elif args.valign == 'descent':
+    elif valign == 'descent':
         y_move = -svg_viewbox[1] - float(font.descent)
-    elif args.valign != '':
-        center = parse_int_arg('valign')
+    elif valign != '':
+        center = parse_int_param('valign', valign)
         y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0 
 
-    y_move += args.ymove
+    y_move += get_int_arg_or_config(glyph_name, "ymove")
 
     print_debug('x_move: %d, y_move: %d' % (x_move, y_move), glyph_name)
 
     matrix = (1, 0, 0,
               1, x_move, y_move)
+
     print_debug('move matrix: %s' % (matrix,), glyph_name)
 
     glyph.transform(matrix)
@@ -444,6 +494,7 @@ for svg_file in svg_files:
     glyph.width = int(round(advance_width))
 
     bbox = glyph.boundingBox()
+
     print_debug('bbox after move: %s' % (bbox,), glyph_name)
     
     if css != None:
@@ -457,9 +508,6 @@ for svg_file in svg_files:
         if html != None:
             html.append('<div><i class="%s %s%s"></i><br><span>%s</span></div>' % (
                 esc_html_dq_str(args.gencssclass), esc_html_dq_str(args.cssclassprefix), esc_html_dq_str(glyph_name), esc_html_dq_str(glyph_name)))
-
-    # Increment the Unicode value for the next character
-    curr_unicode += 1
 
 # Set the font's encoding to Unicode
 font.encoding = 'unicode'
