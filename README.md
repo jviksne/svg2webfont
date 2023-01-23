@@ -44,16 +44,19 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -csc CSSFILE, --cssfile CSSFILE
                         path to the generated CSS file, default: './dist/css/font.css'
   -w1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the WOFF v1 file, must have '.woff' extension, default: './dist/fonts/font.woff'
+                        name of the WOFF v1 file, must have '.woff' extension, default:
+                        './dist/fonts/font.woff'
   -w2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the WOFF v2 file, must have '.woff2' extension, default: './dist/fonts/font.woff2'
+                        name of the WOFF v2 file, must have '.woff2' extension, default:
+                        './dist/fonts/font.woff2'
   -htm HTMLFILE, --htmlfile HTMLFILE
-                        path to an HTML preview file listing all characters, default: './dist/preview.html'
+                        path to an HTML preview file listing all characters, default:
+                        './dist/preview.html'
   -fs PREVIEWFONTSIZE, --previewfontsize PREVIEWFONTSIZE
                         default font size for HTML preview file, default: '24px'
   -cfp CSS2FONTPATH, --css2fontpath CSS2FONTPATH
-                        override relative path from CSS file to the font files; if empty then will be calculated based
-                        on output file paths; pass './' to override to same directory
+                        override relative path from CSS file to the font files; if empty then will be
+                        calculated based on output file paths; pass './' to override to same directory
   -upm UPMSIZE, --upmsize UPMSIZE
                         units per em, default 1000
   -asc ASCENT, --ascent ASCENT
@@ -61,29 +64,39 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -des DESCENT, --descent DESCENT
                         descent size (distance from baseline to bottom), default 200
   -sc SCALE, --scale SCALE
-                        how to scale the SVG view-box, can be 'in_em','over_em','ascdesc', 'no' or a float scale
-                        factor number, default: 'in_em'
+                        how to scale the SVG view-box, can be 'in_em','over_em','ascdesc', 'no' or a
+                        float scale factor number, default: 'in_em'
   -ha HALIGN, --halign HALIGN
-                        how to align the scaled SVG view-box relative to advance width horizontally, can be
-                        'center','left','right' or a number interpreted as a center in font units, default: 'center'
+                        how to align the scaled SVG view-box relative to advance width horizontally, can
+                        be 'center','left','right' or a number interpreted as a center in font units,
+                        default: 'center'
   -va VALIGN, --valign VALIGN
                         how to align the scaled SVG view-box vertically, can be 'base_em_center',
-                        'ascdesc_center','baseline','descent' or a number interpreted as a center in font units,
-                        default: 'ascdesc_center'
+                        'ascdesc_center','baseline','descent' or a number interpreted as a center in
+                        font units, default: 'ascdesc_center'
   -x XMOVE, --xmove XMOVE
-                        by how many units to move the scaled and aligned SVG view-box horizontally, default: 0
+                        by how many units to move the scaled and aligned SVG view-box horizontally,
+                        default: 0
   -y YMOVE, --ymove YMOVE
-                        by how many units to move the scaled and aligned SVG view-box vertically, default: 0
+                        by how many units to move the scaled and aligned SVG view-box vertically,
+                        default: 0
   -min MINWIDTH, --minwidth MINWIDTH
-                        minimal advance width (how much space the font uses horizontally) in font units, besides a
-                        number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'
+                        minimal advance width (how much space the font uses horizontally) in font units,
+                        besides a number can be 'auto' to match the outline (drawing) width or 'em',
+                        default 'auto'
   -max MAXWIDTH, --maxwidth MAXWIDTH
-                        maximal advance width (how much space the font uses horizontally) in font units, besides a
-                        number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'
+                        maximal advance width (how much space the font uses horizontally) in font units,
+                        besides a number can be 'auto' to match the outline (drawing) width or 'em',
+                        default 'auto'
   -sw SEPARATION, --separation SEPARATION
                         separation width in font units between characters, default 0
-  -d, --debug           print additional information (e.g. size of each character in font units) helpful for debugging
-                        and tuning the font
+  -cf CONFIGFILE, --configfile CONFIGFILE
+                        path to a JSON configuration file for overriding parameter values for individual
+                        glyphs
+  -c CONFIG, --config CONFIG
+                        JSON configuration text for overriding parameter values for individual glyphs
+  -d, --debug           print additional information (e.g. size of each character in font units) helpful
+                        for debugging and tuning the font
 ```
 
 ## Sample call with arguments
