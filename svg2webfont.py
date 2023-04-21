@@ -228,17 +228,18 @@ if args.cssfile != '':
    # Store css rules in a string array
     css = ['''
 @font-face {
-  font-family: '%s';
-  src: %s;
+	font-family: '%s';
+	src: %s;
 }
 
 .%s {
-    font-style: normal;
-    text-rendering: auto;
-    display: inline-block;
-    font-variant: normal;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+	font-family: '%s';
+	font-style: normal;
+	text-rendering: auto;
+	display: inline-block;
+	font-variant: normal;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
 }
 ''' % (fontfamily, ',\n       '.join(src), args.gencssclass)]
 
