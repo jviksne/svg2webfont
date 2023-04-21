@@ -1,17 +1,18 @@
 
 @font-face {
-  font-family: 'Icon Font';
-  src: url("../fonts/font.woff2") format("woff2"),
+	font-family: 'Icon Font';
+	src: url("../fonts/font.woff2") format("woff2"),
        url("../fonts/font.woff") format("woff");
 }
 
 .ico {
-    font-style: normal;
-    text-rendering: auto;
-    display: inline-block;
-    font-variant: normal;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+	font-family: 'Icon Font';
+	font-style: normal;
+	text-rendering: auto;
+	display: inline-block;
+	font-variant: normal;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
 }
 
 .ico-bookmark::before {
