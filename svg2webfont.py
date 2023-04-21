@@ -237,6 +237,7 @@ if args.cssfile != '':
     text-rendering: auto;
     display: inline-block;
     font-variant: normal;
+    line-height: 0;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
