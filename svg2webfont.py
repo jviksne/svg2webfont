@@ -241,7 +241,7 @@ if args.cssfile != '':
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-font-smoothing: antialiased;
 }
-''' % (fontfamily, ',\n       '.join(src), args.gencssclass)]
+''' % (fontfamily, ',\n       '.join(src), args.gencssclass, fontfamily)]
 
     if args.htmlfile != '':
         html = [\
