@@ -21,7 +21,7 @@ By default the script generates also a preview HTML file that lists all of the i
 7. Copy the directories with generated files under "dist" directory to the public dictory of your web server.
 8. Include the css file into your HTML files:
 `<link href="/css/font.css" rel="stylesheet">`
-Note that by default the css file expected the font files to be located under "fonts" subdirectory of it's parent directory (../font/font.)
+Note that by default the css file expected the font files to be located under "fonts" subdirectory of it's parent directory (../fonts/.)
 9. The HTML tag format for using the icon within the web page is:
  `<i class="ico ico-settings></i>`
 
