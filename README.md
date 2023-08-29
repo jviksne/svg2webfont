@@ -44,10 +44,10 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -csc CSSFILE, --cssfile CSSFILE
                         path to the generated CSS file, default: './dist/css/font.css'
   -w1 WOFF1FILE, --woff1file WOFF1FILE
-                        name of the WOFF v1 file, must have '.woff' extension, default:
+                        path to the generated WOFF v1 file, must have '.woff' extension, default:
                         './dist/fonts/font.woff'
   -w2 WOFF2FILE, --woff2file WOFF2FILE
-                        name of the WOFF v2 file, must have '.woff2' extension, default:
+                        path to the generated WOFF v2 file, must have '.woff2' extension, default:
                         './dist/fonts/font.woff2'
   -htm HTMLFILE, --htmlfile HTMLFILE
                         path to an HTML preview file listing all characters, default:
