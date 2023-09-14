@@ -9,6 +9,56 @@ import os
 import xml.etree.ElementTree as ET
 import json
 
+class Rect:
+    def __init__(self,
+                 x1:float,
+                 y1:float,
+                 x2:float = None,
+                 y2: float = None,
+                 width:float = None,
+                 height: float = None):
+        
+        if x2 is None:
+            if width is None:
+                raise Exception("Neither width nor x2 passed to Rect")
+            x2 = x1 + width
+        if y2 is None:
+            if height is None:
+                raise Exception("Neither height nor y2 passed to Rect")
+            y2 = y1 + height
+
+        self.min_x = min(x1, x2)
+        self.min_y = min(y1, y2)
+        self.max_x = max(x1, x2)
+        self.max_y = max(y1, y2)
+
+    @staticmethod
+    def from_rect(rect):
+        return Rect(
+            x1=rect.min_x,
+            y1=rect.min_y,
+            x2=rect.max_x,
+            y2=rect.max_y)
+            
+    @property
+    def width(self):
+        return self.max_x - self.min_x
+
+    @property
+    def height(self):
+        return self.max_y - self.min_y
+
+    def transform(self, matrix):
+        new_xywh = transform(matrix, [self.min_x, self.min_y, self.width, self.height])
+        return Rect(x1=new_xywh[0], y1=new_xywh[1], width=new_xywh[2], height=new_xywh[3])
+
+    def move_to(self, x: float, y: float):
+        self.min_x = x
+        self.min_y = y
+                
+    def __repr__(self):
+        return f"Rect(min_x={self.min_x}, min_y={self.min_y}, max_x={self.max_x}, max_y={self.max_y}, width={self.width}, height={self.height})"
+
 def assert_dst_file_path(filepath:str, param:str):
     
     (path, file) = os.path.split(filepath)
@@ -99,15 +149,20 @@ def format_font_file_src_css(font_file_fs_path:str, css_fs_path:str, override_ur
     return 'url("%s") format("%s")' % (esc_html_dq_str(url), esc_html_dq_str(css_format))
 
 def get_svg_viewbox(path):
+    #SVG viewbox has the origin on top left with positive values going right and down
     tree = ET.parse(path)
     root = tree.getroot()
     if 'viewBox' in root.attrib:
         parts = root.attrib['viewBox'].split()
         if len(parts) == 4:
-            return [float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3])]
+            return Rect(x1=float(parts[0]), y1=float(parts[1]), width=float(parts[2]), height=float(parts[3]))
     if 'width' in root.attrib and 'height' in root.attrib:
-        return [0.0, 0.0, float(root.attrib['width']), float(root.attrib['height'])]
+        return Rect(x1=0.0, y1=0.0, width=float(root.attrib['width']), height=float(root.attrib['height']))
     return None
+
+def get_glyph_bbox_rect(glyph):
+    rect = glyph.boundingBox() # xmin,ymin, xmax,ymax from baseline to ascender
+    return Rect(x1=rect[0], y1=rect[1], x2=rect[2], y2=rect[3])
 
 def transformXY(matrix, xy):
     a, b, c, d, e, f = matrix
@@ -148,9 +203,9 @@ parser.add_argument('-upm', '--upmsize', help='units per em, default 1000', defa
 parser.add_argument('-asc', '--ascent', help='ascent size (distance from baseline to top), default 800', default=800, type=int)
 parser.add_argument('-des', '--descent', help='descent size (distance from baseline to bottom), default 200', default=200, type=int)
 
-parser.add_argument('-sc', '--scale', help="how to scale the SVG view-box, can be 'in_em','over_em','ascdesc', 'no' or a float scale factor number, default: 'in_em'", default='in_em', type=str)
+parser.add_argument('-sc', '--scale', help="how to scale the SVG view-box, can be 'in_em', 'over_em', 'in_ascent', 'over_ascent', 'no' or a float scale factor number, default: 'in_em'", default='in_em', type=str)
 parser.add_argument('-ha', '--halign', help="how to align the scaled SVG view-box relative to advance width horizontally, can be 'center','left','right' or a number interpreted as a center in font units, default: 'center'", default='center', type=str)
-parser.add_argument('-va', '--valign', help="how to align the scaled SVG view-box vertically, can be 'base_em_center', 'ascdesc_center','baseline','descent' or a number interpreted as a center in font units, default: 'ascdesc_center'", default='ascdesc_center', type=str)
+parser.add_argument('-va', '--valign', help="how to align the scaled SVG view-box vertically, can be 'ascent_center', 'ascdesc_center','baseline','descent' or a number interpreted as a center in font units, default: 'ascdesc_center'", default='ascdesc_center', type=str)
 parser.add_argument('-x', '--xmove', help='by how many units to move the scaled and aligned SVG view-box horizontally, default: 0', default=0, type=int)
 parser.add_argument('-y', '--ymove', help='by how many units to move the scaled and aligned SVG view-box vertically, default: 0', default=0, type=int)
 
@@ -292,9 +347,9 @@ else:
 # Create a new font
 font = fontforge.font()
 
-font.em = args.upmsize
-font.ascent = args.ascent
-font.descent = args.descent
+font.em = args.upmsize 		# units (points) per 1 em
+font.ascent = args.ascent 	# distance from baseline (where fonts are position) to top for tallest fonts
+font.descent = args.descent # distance from baseline to bottom for fonts that go below baseline
 
 print_debug('font.em=%s, font.ascent=%s, font.descent=%s,' % (font.em, font.ascent, font.descent))
 
@@ -352,30 +407,41 @@ for svg_file in svg_files:
     glyph.glyphname = glyph_name
 
     # Try to read the viewbox info from the SVG
+    # SVG viewbox has the origin on top left with positive values going right and down
     svg_viewbox = get_svg_viewbox(svg_file_path)
     print_debug('svg viewbox read: %s' % (svg_viewbox,), glyph_name)
 
     # Get the bounding box in the glyph
-    bbox = glyph.boundingBox()
-    print_debug('bbox before scale: %s, width: %d, height: %d' % (bbox, bbox[2]-bbox[0], bbox[3]-bbox[1]), glyph_name)
+    bbox = get_glyph_bbox_rect(glyph)
+    print_debug('bbox before scale: %s' % (bbox,), glyph_name)
 
     # If viewbox could not be imported from the XML, use the bounding box
     if svg_viewbox == None:
-        svg_viewbox = [float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])]
+        # glyph has vertical origin on the baseline with positive values above
+        # going towards ascent and negative values below going towards -descent
+        glyph_viewbox = Rect.from_rect(bbox)
     else:
-        # If viewbox could be imported from the XML, update it's positions
-        # to match the positions in SVG with top left corner matching font.ascent and 0.
+        # If viewbox could be imported from the XML, calculate
+        # it's position in Glyph coordinate system.
 
-        # Bottom of SVG is poisition at font.ascent - viewbox height
-        svg_viewbox[1] = float(font.ascent) - (svg_viewbox[3] - svg_viewbox[1])
+        # SVG has bottom right coordinate system with origin on top left;
+        # Glyph has up right coordinate system with origin on baseline;
+        # FontForge maps the origin of SVG to the top left corner of ascent (i.e. 0,800).
 
-        # Topof SVG is positioned at font.ascent
-        svg_viewbox[3] = float(font.ascent)
+        # It appears though that at least version 20230101 does not
+        # translate the positions if top left of the viewbox in the SVG is not 0, 0.
+        # E.g. if the viewbox starts at 0, -960 and a dot is down in the middle
+        # of the viewbox - 0,-460 - it will get imported at position 0, 1260
+        # in glyph - way above the ascent.
 
-    print_debug('svg viewbox adjusted to: %s' % (svg_viewbox,), glyph_name)
+        glyph_viewbox = Rect(
+            x1=svg_viewbox.min_x,
+            y1=float(font.ascent) - svg_viewbox.min_y, #-960 in SVG should become 800 + 960 in glyph
+            width=svg_viewbox.width,
+            height=-svg_viewbox.height
+        )
 
-    svg_viewbox_width = svg_viewbox[2] - svg_viewbox[0]
-    svg_viewbox_height = svg_viewbox[3] - svg_viewbox[1]
+    print_debug('viewbox in glyph: %s' % (glyph_viewbox,), glyph_name)
 
     # Some paths do not get scaled by importOutlines with scale=True
     # so scale manually to fit into em square
@@ -384,19 +450,18 @@ for svg_file in svg_files:
 
     # Use exact scaling factor if such is specified
     scale = get_arg_or_config(glyph_name, "scale")
-    if scale == 'in_em': # touch em from inside
-        scale = float(font.em) / max(svg_viewbox_width, svg_viewbox_height)
+    if scale == 'in_em': # touch 1x1 em (usually 1000x1000) from inside
+        scale = float(font.em) / max(glyph_viewbox.width, glyph_viewbox.height)
     elif scale == 'over_em': # touch em from outside
-        scale = float(font.em) / min(svg_viewbox_width, svg_viewbox_height)
-    elif scale == 'in_ascdesc':
-        scale = float(font)
-    elif scale == 'over_ascdesc':
-        scale = max(float(font.em) / svg_viewbox_width, float(font.em) / svg_viewbox_height)
+        scale = float(font.em) / min(glyph_viewbox.width, glyph_viewbox.height)
+    elif scale == 'in_ascent':
+        scale = float(font.ascent) / max(glyph_viewbox.width, glyph_viewbox.height)
+    elif scale == 'over_ascent':
+        scale = float(font.ascent) / min(glyph_viewbox.width, glyph_viewbox.height)
     elif scale != 'no' and scale != '':
         scale = parse_int_param('scale', scale)
     else:
         scale = None
-    #scale = float(max_viewbox_height) / max(float(svg_viewbox_width), float(svg_viewbox_height))
 
     if scale != None:
         # Generate PostScript transformation matrix for scaling
@@ -408,19 +473,12 @@ for svg_file in svg_files:
         glyph.transform(matrix)
 
         # Apply scaling matrix to viewBox
-        svg_viewbox = transform(matrix, svg_viewbox)
+        glyph_viewbox = glyph_viewbox.transform(matrix)
 
-        bbox = glyph.boundingBox()
+        bbox = get_glyph_bbox_rect(glyph)
 
-    # Calculate the scaled dimensions
-    scaled_outline_width = bbox[2] - bbox[0]
-    scaled_outline_height = bbox[3] - bbox[1]
-
-    scaled_viewbox_width = svg_viewbox[2] - svg_viewbox[0]
-    scaled_viewbox_height = svg_viewbox[3] - svg_viewbox[1]
-
-    print_debug('bbox after scale: %s, width: %d, height: %d' % (bbox, scaled_outline_width, scaled_outline_height), glyph_name)
-    print_debug('viewbox after scale: %s, width: %d, height: %d' % (svg_viewbox, scaled_viewbox_width, scaled_viewbox_height), glyph_name)
+    print_debug('bbox after scale: %s' % (bbox,), glyph_name)
+    print_debug('viewbox after scale: %s' % (glyph_viewbox,), glyph_name)
 
     # Calculate the advance width of the font (the space it takes, not the space it is drawn in)
     adv_min_width = get_arg_or_config(glyph_name, "minwidth")
@@ -439,7 +497,7 @@ for svg_file in svg_files:
     else:
         adv_max_width = parse_int_param("maxwidth", adv_max_width)
 
-    advance_width = scaled_outline_width
+    advance_width = bbox.width
     if adv_min_width != None and advance_width < adv_min_width:
         advance_width = adv_min_width
     
@@ -449,16 +507,18 @@ for svg_file in svg_files:
     print_debug('advance_width=%s' % (advance_width,), glyph_name) 
 
     halign = get_arg_or_config(glyph_name, "halign")
+    print_debug('halign: %s' % (halign,), glyph_name)
+
     if halign == 'center':
         # Move the center of the viewbox to be in the center of the advance_width horizontally
-        x_move = (float(advance_width) - scaled_viewbox_width) / 2.0 - svg_viewbox[0]
+        x_move = (float(advance_width) - glyph_viewbox.width) / 2.0 - glyph_viewbox.min_x
     elif halign == 'right':
-        x_move = float(advance_width) - svg_viewbox[2]
+        x_move = float(advance_width) - glyph_viewbox.width
     elif halign == 'left':
-        x_move = -svg_viewbox[0]
+        x_move = -glyph_viewbox.min_x
     elif halign != '':
         center = parse_int_param('halign', halign)
-        x_move = -svg_viewbox[0] + center + scaled_viewbox_width / 2.0
+        x_move = -glyph_viewbox.min_x + center + glyph_viewbox.width / 2.0
     else:
         x_move = 0
 
@@ -466,19 +526,21 @@ for svg_file in svg_files:
 
     # Move the center of the viewbox to be in the center of the em vertically
     valign = get_arg_or_config(glyph_name, "valign")
+    print_debug('valign: %s' % (valign,), glyph_name)
+
     if valign == 'ascdesc_center':
-        center = float(font.ascent) - (float(font.ascent) + float(font.descent)) / 2.0
-        y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0
-    elif valign == 'base_em_center':
-        center = float(font.em) / 2.0
-        y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0
+        center = (float(font.ascent) + float(font.descent)) / 2.0 - font.descent #e.g. origin = 0, ascent=800 above, descent=200 below
+        y_move = -glyph_viewbox.max_y + center + glyph_viewbox.height / 2.0
+    elif valign == 'ascent_center':
+        center = float(font.ascent) / 2.0
+        y_move = -glyph_viewbox.max_y + center + glyph_viewbox.height / 2.0
     elif valign == 'baseline':
-        y_move = -svg_viewbox[1]
+        y_move = -glyph_viewbox.min_y
     elif valign == 'descent':
-        y_move = -svg_viewbox[1] - float(font.descent)
+        y_move = -glyph_viewbox.min_y - float(font.descent)
     elif valign != '':
         center = parse_int_param('valign', valign)
-        y_move = -svg_viewbox[3] + center + scaled_viewbox_height / 2.0 
+        y_move = -glyph_viewbox.max_y + center + glyph_viewbox.height / 2.0 
 
     y_move += get_int_arg_or_config(glyph_name, "ymove")
 
@@ -494,7 +556,7 @@ for svg_file in svg_files:
     # Set the new width after the transform because transform would transform also the width
     glyph.width = int(round(advance_width))
 
-    bbox = glyph.boundingBox()
+    bbox = get_glyph_bbox_rect(glyph)
 
     print_debug('bbox after move: %s' % (bbox,), glyph_name)
     
@@ -516,7 +578,7 @@ font.encoding = 'unicode'
 if args.debug:
     print('font.em: %s, font.ascent=%s, font.descent=%s,' % (font.em, font.ascent, font.descent))
     for glyph in font.glyphs():
-        bbox = glyph.boundingBox()
+        bbox = get_glyph_bbox_rect(glyph)
         print('%s, adv_width=%d, bbox=%s' % (glyph.glyphname, glyph.width, bbox))
 
 # Generate the css file

@@ -64,14 +64,14 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -des DESCENT, --descent DESCENT
                         descent size (distance from baseline to bottom), default 200
   -sc SCALE, --scale SCALE
-                        how to scale the SVG view-box, can be 'in_em','over_em','ascdesc', 'no' or a
-                        float scale factor number, default: 'in_em'
+                        how to scale the SVG view-box, can be 'in_em','over_em', 'in_ascent', 'over_ascent',
+                        'no' or a float scale factor number, default: 'in_em'
   -ha HALIGN, --halign HALIGN
                         how to align the scaled SVG view-box relative to advance width horizontally, can
                         be 'center','left','right' or a number interpreted as a center in font units,
                         default: 'center'
   -va VALIGN, --valign VALIGN
-                        how to align the scaled SVG view-box vertically, can be 'base_em_center',
+                        how to align the scaled SVG view-box vertically, can be 'ascent_center',
                         'ascdesc_center','baseline','descent' or a number interpreted as a center in
                         font units, default: 'ascdesc_center'
   -x XMOVE, --xmove XMOVE
