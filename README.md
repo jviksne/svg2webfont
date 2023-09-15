@@ -83,7 +83,7 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
   -min MINWIDTH, --minwidth MINWIDTH
                         minimal advance width (how much space the font uses horizontally) in font units,
                         besides a number can be 'auto' to match the outline (drawing) width or 'em',
-                        default 'auto'
+                        default 'em'
   -max MAXWIDTH, --maxwidth MAXWIDTH
                         maximal advance width (how much space the font uses horizontally) in font units,
                         besides a number can be 'auto' to match the outline (drawing) width or 'em',

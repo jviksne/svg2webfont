@@ -209,7 +209,7 @@ parser.add_argument('-va', '--valign', help="how to align the scaled SVG view-bo
 parser.add_argument('-x', '--xmove', help='by how many units to move the scaled and aligned SVG view-box horizontally, default: 0', default=0, type=int)
 parser.add_argument('-y', '--ymove', help='by how many units to move the scaled and aligned SVG view-box vertically, default: 0', default=0, type=int)
 
-parser.add_argument('-min', '--minwidth', help="minimal advance width (how much space the font uses horizontally) in font units, besides a number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'", default='auto', type=str)
+parser.add_argument('-min', '--minwidth', help="minimal advance width (how much space the font uses horizontally) in font units, besides a number can be 'auto' to match the outline (drawing) width or 'em', default 'em'", default='em', type=str)
 parser.add_argument('-max', '--maxwidth', help="maximal advance width (how much space the font uses horizontally) in font units, besides a number can be 'auto' to match the outline (drawing) width or 'em', default 'auto'", default='auto', type=str)
 parser.add_argument('-sw', '--separation', help='separation width in font units between characters, default 0', default=0, type=int)
 
