@@ -177,6 +177,14 @@ def transform(matrix, xywh):
     x2, y2 = transformXY(matrix, (xywh[0] + xywh[2], xywh[1] + xywh[3]))
     return (x1, y1, x2 - x1, y2 - y1)
 
+def is_glyph_empty(glyph): 
+    if len(glyph.layers) < 2:
+        return True
+    layer = glyph.layers[1]
+    if len(layer) == 0: #TODO: verify that this is the proper way
+        return True
+    return False
+
 def print_debug(info:str, char_name:str = None):
     global args
     if args.debug:
@@ -396,12 +404,18 @@ for svg_file in svg_files:
     glyph = font.createChar(curr_unicode)
 
     svg_file_path = os.path.join(svg_dir, svg_file)
-
     # Import the svg
     # Some paths do not get scaled by importOutlines with scale=True, so use manual scaling below
     # (TODO: figure out why exactly - possibly if they lack viewBox)
     # The outline will get imported on top left corner right below the ascent
-    glyph.importOutlines(svg_file_path, scale=False) 
+    try:
+        glyph.importOutlines(svg_file_path, scale=False) 
+    except Exception as e:
+        print(f"Failed to import outlines from SVG file %s: {e}" % (svg_file_path,))
+        continue
+    
+    if is_glyph_empty(glyph):
+        print(f"Warning: The SVG file '{svg_file_path}' is either empty or FontForge failed to import outlines from it.")
 
     # Set name
     glyph.glyphname = glyph_name
