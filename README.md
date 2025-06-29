@@ -30,7 +30,7 @@ By default the script generates also a preview HTML file that lists all of the i
 `<link href="/css/font.css" rel="stylesheet">`
 Note that by default the css file expected the font files to be located under "fonts" subdirectory of it's parent directory (../fonts/.)
 9. The HTML tag format for using the icon within the web page is:
- `<i class="ico ico-settings></i>`
+ `<i class="ico ico-settings"></i>`
 
 ## Arguments
 
