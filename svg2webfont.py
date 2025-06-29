@@ -581,6 +581,11 @@ for svg_file in svg_files:
 
     glyph.transform(matrix)
 
+    # Add hinting & grid-rounding to improve the scaling
+    glyph.round()          # snap all points to integer font-units
+    glyph.autoHint()       # add CVT data and TrueType grid-fitting hints
+    glyph.autoInstr()      # build minimal TrueType instructions
+
     # Set the new width after the transform because transform would transform also the width
     glyph.width = int(round(advance_width))
 
@@ -620,35 +625,65 @@ if args.debug:
 # ------------------------------------------------------------------
 
 if args.mode in ('ligature', 'both'):
-    # 1. Create zero-width glyphs for every character that appears
+
+    # ---------------------------------------------------------------------
+    # 0.  Helper: map every allowed character → the glyph-name we will use.
+    # ---------------------------------------------------------------------
+    AGL = {
+        '0': 'zero',  '1': 'one',  '2': 'two',   '3': 'three', '4': 'four',
+        '5': 'five',  '6': 'six',  '7': 'seven', '8': 'eight', '9': 'nine',
+        '_': 'underscore',
+        '-': 'hyphen',
+    }
+
+    def glyph_name_for_char(ch: str) -> str:
+        """
+        Return the glyph name we will *always* use for this character –
+        both when we create the blank placeholder and when we reference it
+        inside a ligature rule.
+        """
+        return AGL.get(ch, ch)            # letters stay the same (“t”, “u”, …)
+
+    # ---------------------------------------------------------------------
+    # 1.  Create zero-width dummy glyphs for every character that can appear
+    #     inside an icon name.
+    # ---------------------------------------------------------------------
     safe_chars = "abcdefghijklmnopqrstuvwxyz0123456789_-"
-    icon_chars = set("".join(g.glyphname for g in font.glyphs()))        # names of icons
-    flat_chars = {ch for name in icon_chars for ch in name if ch in safe_chars}     # every letter/_/digit…
-    dummy_blank_chars = set()
+    icon_names  = {g.glyphname for g in font.glyphs()}            # real icons
+    flat_chars  = {c for name in icon_names for c in name
+                   if c in safe_chars}                            # every char
+    dummy_blanks = set()
 
     for ch in flat_chars:
-        cp = ord(ch)
-        if cp not in font:
-            blank = font.createChar(cp)
-            blank.width = 0          # invisible placeholder
-            dummy_blank_chars.add(ch)
+        cp     = ord(ch)
+        g_name = glyph_name_for_char(ch)
 
-    # 2. Build the lookup
+        if g_name not in font:               # avoid duplicates
+            blank = font.createChar(cp, g_name)
+            blank.width = 0                  # invisible place-holder
+            dummy_blanks.add(g_name)
+
+    # ---------------------------------------------------------------------
+    # 2.  Build the GSUB “liga” lookup
+    # ---------------------------------------------------------------------
     font.addLookup('Ligatures', 'gsub_ligature', (),
-                (('liga', (('DFLT', ('dflt')),)),))
+                   (('liga', (('DFLT', ('dflt')),)),))
     font.addLookupSubtable('Ligatures', 'LigaturesSub')
 
     for g in font.glyphs():
-        icon_name = g.glyphname                      # e.g. 'arrow_back'
+        icon_name = g.glyphname          # e.g.  "refresh_2"
 
-        if icon_name in dummy_blank_chars: # do not add ligature mapping for blank characters
+        # skip the dummy glyphs themselves
+        if icon_name in dummy_blanks:
             continue
 
-        # Translate every char → glyph-name FontForge uses
-        comps = tuple(fontforge.nameFromUnicode(ord(c)) for c in icon_name)
-        # Guard: skip if any component name is '.notdef'
-        if all(c != '.notdef' for c in comps):
+        # turn each character of the icon name into the glyph-name we expect
+        comps = tuple(glyph_name_for_char(c) for c in icon_name)
+
+        # guard: all component names must exist in the font
+        if all(name in font for name in comps):
             g.addPosSub('LigaturesSub', comps)
+
 
 # ------------------------------------------------------------------
 
@@ -667,11 +702,19 @@ if args.cssfile != '':
 ''')
         f.close()
 
+# Clean up outlines for better scaling
+font.selection.all()
+font.correctDirection()
+font.removeOverlap()
+font.round()           # snap any stragglers
+font.autoHint()
+font.autoInstr()
+
 # Generate the font files
 if args.woff1file != '':
-    font.generate(args.woff1file)
+    font.generate(args.woff1file) # TrueType-flavoured WOFF 1.0 with a dummy DSIG
 if args.woff2file != '':
-    font.generate(args.woff2file)
+    font.generate(args.woff2file) # TrueType-flavoured WOFF 2.0 with a dummy DSIG
 
 # Close the font
 font.close()
