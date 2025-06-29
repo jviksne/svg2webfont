@@ -13,19 +13,5 @@
 	font-variant: normal;
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-font-smoothing: antialiased;
-}
-
-.ico-bookmark::before {
-  content: "\ea01";
-  font-family: "Icon Font";
-}
-
-.ico-github::before {
-  content: "\ea02";
-  font-family: "Icon Font";
-}
-
-.ico-settings::before {
-  content: "\ea03";
-  font-family: "Icon Font";
+font-variant-ligatures: common-ligatures;
 }

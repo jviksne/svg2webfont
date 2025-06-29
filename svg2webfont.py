@@ -119,7 +119,7 @@ def get_rel_path(from_file:str, to_file:str, to_url:bool):
     if to_url:
         return join_url_path(path.replace('\\', '/'), to_filename)
     
-    return os.path.join(path, to_file)
+    return os.path.join(path, to_filename)
 
 def join_url_path(path:str, file:str):
     
@@ -142,7 +142,7 @@ def format_font_file_src_css(font_file_fs_path:str, css_fs_path:str, override_ur
     
     if override_url_path != '':
         (_, filename) = os.path.split(font_file_fs_path)
-        url = join_url_path(args.css2fontpath, filename)
+        url = join_url_path(override_url_path, filename)
     else:
         url = get_rel_path(css_fs_path, font_file_fs_path, True)
     
@@ -178,12 +178,7 @@ def transform(matrix, xywh):
     return (x1, y1, x2 - x1, y2 - y1)
 
 def is_glyph_empty(glyph): 
-    if len(glyph.layers) < 2:
-        return True
-    layer = glyph.layers[1]
-    if len(layer) == 0: #TODO: verify that this is the proper way
-        return True
-    return False
+    return not glyph.isWorthOutputting()
 
 def print_debug(info:str, char_name:str = None):
     global args
@@ -194,7 +189,16 @@ def print_debug(info:str, char_name:str = None):
             print(info)
 
 # Parse input arguments
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    
+)
+
+parser.add_argument(
+    '-m', '--mode',
+    choices=['class', 'ligature', 'both'],
+    default='ligature',
+    help=("How icons will be referenced in HTML/CSS: 'class' - generate .ico-NAME classes with \\EAXX escapes (legacy), 'ligature' - add GSUB 'liga' table so typing the icon name shows the glyph (default), or 'both'"))
+
 parser.add_argument('-st', '--start', help='Unicode index in hexadecimal form to start from, default: \'EA01\'', default='EA01', type=str)
 parser.add_argument('-src', '--srcdir', help='path to the directory with SVG files, default: \'./src/\'', default='./src/', type=str)
 parser.add_argument('-ff', '--fontfamily', help='CSS font family name, default: \'Icon Font\'', default='Icon Font', type=str)
@@ -255,7 +259,7 @@ if args.woff1file != '':
     assert_dst_file_path(args.woff1file, 'woff1file')
 
 if args.woff2file != '':
-    assert_dst_file_path(args.cssfile, 'woff2file')
+    assert_dst_file_path(args.woff2file, 'woff2file')
 
 if args.htmlfile != '':
     assert_dst_file_path(args.htmlfile, 'htmlfile')
@@ -287,6 +291,10 @@ if args.cssfile != '':
         sys.exit('woff 2.0 or woff file name must be specified')
 
     fontfamily = esc_html_dq_str(args.fontfamily)
+    
+    ligature_css_rule = ""
+    if args.mode in ('ligature', 'both'):
+        ligature_css_rule='\nfont-variant-ligatures: common-ligatures;'
 
    # Store css rules in a string array
     css = ['''
@@ -302,9 +310,9 @@ if args.cssfile != '':
 	display: inline-block;
 	font-variant: normal;
 	-moz-osx-font-smoothing: grayscale;
-	-webkit-font-smoothing: antialiased;
+	-webkit-font-smoothing: antialiased;%s
 }
-''' % (fontfamily, ',\n       '.join(src), args.gencssclass, fontfamily)]
+''' % (fontfamily, ',\n       '.join(src), args.gencssclass, fontfamily, ligature_css_rule)]
 
     if args.htmlfile != '':
         html = [\
@@ -385,8 +393,13 @@ svg_files.sort()
 max_width = 0.0
 max_height = 0.0
 
+				   
+svg_file_index = 0
+
 # Iterate through the list of SVG files
 for svg_file in svg_files:
+
+    svg_file_index += 1
 
     glyph_name = svg_file[0:-len('.svg')]
     if len(glyph_name) == 0:
@@ -404,6 +417,7 @@ for svg_file in svg_files:
     glyph = font.createChar(curr_unicode)
 
     svg_file_path = os.path.join(svg_dir, svg_file)
+
     # Import the svg
     # Some paths do not get scaled by importOutlines with scale=True, so use manual scaling below
     # (TODO: figure out why exactly - possibly if they lack viewBox)
@@ -473,7 +487,7 @@ for svg_file in svg_files:
     elif scale == 'over_ascent':
         scale = float(font.ascent) / min(glyph_viewbox.width, glyph_viewbox.height)
     elif scale != 'no' and scale != '':
-        scale = parse_int_param('scale', scale)
+        scale = parse_float_param('scale', scale)
     else:
         scale = None
 
@@ -575,7 +589,9 @@ for svg_file in svg_files:
     print_debug('bbox after move: %s' % (bbox,), glyph_name)
     
     if css != None:
-        css.append(\
+    
+        if args.mode in  ('class', 'both'):
+            css.append(\
 '''.%s%s::before {
   content: "\\%s";
   font-family: "%s";
@@ -583,8 +599,12 @@ for svg_file in svg_files:
 ''' % (esc_html_dq_str(args.cssclassprefix), esc_html_dq_str(glyph_name), hex(curr_unicode)[2:], esc_html_dq_str(fontfamily)))
 
         if html != None:
-            html.append('<div><i class="%s %s%s"></i><br><span>%s</span></div>' % (
-                esc_html_dq_str(args.gencssclass), esc_html_dq_str(args.cssclassprefix), esc_html_dq_str(glyph_name), esc_html_dq_str(glyph_name)))
+            if args.mode == 'class' or (args.mode == 'both' and svg_file_index % 2 == 1):
+                html.append('<div><i class="%s %s%s"></i><br><span>%s</span></div>' % (
+                    esc_html_dq_str(args.gencssclass), esc_html_dq_str(args.cssclassprefix), esc_html_dq_str(glyph_name), esc_html_dq_str(glyph_name)))
+            else:
+                html.append('<div><i class="%s">%s</i><br><span>%s</span></div>' % (
+                    esc_html_dq_str(args.gencssclass), esc_html_dq_str(glyph_name), esc_html_dq_str(glyph_name)))
 
 # Set the font's encoding to Unicode
 font.encoding = 'unicode'
@@ -594,6 +614,43 @@ if args.debug:
     for glyph in font.glyphs():
         bbox = get_glyph_bbox_rect(glyph)
         print('%s, adv_width=%d, bbox=%s' % (glyph.glyphname, glyph.width, bbox))
+
+# ------------------------------------------------------------------
+# ADD LIGATURE SUPPORT
+# ------------------------------------------------------------------
+
+if args.mode in ('ligature', 'both'):
+    # 1. Create zero-width glyphs for every character that appears
+    safe_chars = "abcdefghijklmnopqrstuvwxyz0123456789_-"
+    icon_chars = set("".join(g.glyphname for g in font.glyphs()))        # names of icons
+    flat_chars = {ch for name in icon_chars for ch in name if ch in safe_chars}     # every letter/_/digit…
+    dummy_blank_chars = set()
+
+    for ch in flat_chars:
+        cp = ord(ch)
+        if cp not in font:
+            blank = font.createChar(cp)
+            blank.width = 0          # invisible placeholder
+            dummy_blank_chars.add(ch)
+
+    # 2. Build the lookup
+    font.addLookup('Ligatures', 'gsub_ligature', (),
+                (('liga', (('DFLT', ('dflt')),)),))
+    font.addLookupSubtable('Ligatures', 'LigaturesSub')
+
+    for g in font.glyphs():
+        icon_name = g.glyphname                      # e.g. 'arrow_back'
+
+        if icon_name in dummy_blank_chars: # do not add ligature mapping for blank characters
+            continue
+
+        # Translate every char → glyph-name FontForge uses
+        comps = tuple(fontforge.nameFromUnicode(ord(c)) for c in icon_name)
+        # Guard: skip if any component name is '.notdef'
+        if all(c != '.notdef' for c in comps):
+            g.addPosSub('LigaturesSub', comps)
+
+# ------------------------------------------------------------------
 
 # Generate the css file
 if args.cssfile != '':

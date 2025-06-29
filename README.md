@@ -4,8 +4,15 @@ FontForge Python script for converting a list of SVG files into CSS web font for
 
 Each SVG file will be interpreted as representing a single character with the file name (without extension) becoming a CSS class with a custom ("ico-" by default) prefix. The SVG files do not need to be structured in any specific way.
 
-Script generates a CSS file and two font files in WOFF and WOFF 2.0 formats that need to be uploaded to the web server's public directory. To use the fonts as icons the CSS file needs to be included. Sample icon HTML tag format:
-`<i class="ico ico-settings"></i>`
+Script generates a CSS file and two font files in WOFF and WOFF 2.0 formats that need to be uploaded to the web server's public directory. To use the fonts as icons the CSS file needs to be included.
+
+**HTML tag format to use in your page depends on the `--mode` you passed when building:**
+
+| Build mode | Write icons like… |
+|------------|------------------|
+| `class`    | ```html<br><i class="ico ico-settings"></i>``` |
+| `ligature` (default) | ```html<br><i class="ico">settings</i>``` |
+| `both`     | Either of the above works |
 
 By default the script generates also a preview HTML file that lists all of the icons. Preview file for the three sample Feather Icon (https://feathericons.com/, https://github.com/feathericons/feather) icons included in the repository: https://jviksne.github.io/svg2webfont/dist/preview.html
 
@@ -31,6 +38,11 @@ The following arguments can be passed after the `--script svg2webfont.py` argume
 
 ```
   -h, --help            show this help message and exit
+  -m {class,ligature,both}, --mode {class,ligature,both}
+                        How icons will be referenced in HTML/CSS:
+                        - class – generate .ico-NAME classes with \EAXX escapes (legacy)
+                        - ligature – add GSUB 'liga' table so typing the icon name shows the glyph (default)
+                        - both – emit both mechanisms for maximum compatibility
   -st START, --start START
                         Unicode index in hexadecimal form to start from, default: 'EA01'
   -src SRCDIR, --srcdir SRCDIR
