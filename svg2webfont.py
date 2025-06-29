@@ -294,7 +294,7 @@ if args.cssfile != '':
     
     ligature_css_rule = ""
     if args.mode in ('ligature', 'both'):
-        ligature_css_rule='\nfont-variant-ligatures: common-ligatures;'
+        ligature_css_rule='\n	font-variant-ligatures: common-ligatures;'
 
    # Store css rules in a string array
     css = ['''
